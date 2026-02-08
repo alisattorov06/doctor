@@ -5,4 +5,5 @@ sqlalchemy==2.0.23
 google-genai
 aiofiles==23.2.1
 markdown==3.5.2
+aiosqlite==0.19.0
 bleach==6.0.0
