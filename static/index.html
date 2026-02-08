@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --ai-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --user-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --mobile-bg: #f8fafc;
+            --mobile-border-radius: 16px;
+            --mobile-padding: 16px;
+            --mobile-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --mobile-font-size: 14px;
+            --mobile-line-height: 1.5;
+            --mobile-message-max-width: 90%;
+            --mobile-input-height: 50px;
+            --mobile-button-size: 44px;
+            --mobile-welcome-radius: 18px;
+            --mobile-welcome-padding: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--mobile-bg);
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 0;
+            margin: 0;
+        }
+
+        .fixed-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .navbar-custom {
+            background: var(--primary-gradient);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            border-bottom: none;
+            padding: 12px 16px;
+        }
+
+        .navbar-brand {
+            font-size: 18px !important;
+            font-weight: 600;
+        }
+
+        .navbar-brand i {
+            font-size: 20px !important;
+            margin-right: 8px !important;
+        }
+
+        .navbar-text {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .alert-notification {
+            margin: 0;
+            border-radius: 0;
+            border: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            padding: 10px 16px;
+        }
+
+        .alert-notification .fa-info-circle {
+            font-size: 14px;
+        }
+
+        .alert-notification strong {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .alert-notification span {
+            font-size: 12px;
+        }
+
+        #chat-container {
+            flex: 1;
+            overflow: hidden;
+            padding: 0;
+            position: relative;
+            background: var(--mobile-bg);
+        }
+
+        #chat-messages {
+            height: 100%;
+            overflow-y: auto;
+            padding: 16px;
+            scroll-behavior: smooth;
+            background: var(--mobile-bg);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 2px;
+        }
+
+        .message-bubble {
+            max-width: var(--mobile-message-max-width);
+            margin-bottom: 12px;
+            animation: fadeInUp 0.2s ease-out;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            position: relative;
+            border-radius: 18px;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: var(--user-gradient);
+            color: white;
+            border-radius: 18px 18px 6px 18px;
+            margin-left: auto;
+            box-shadow: 0 3px 12px rgba(67, 233, 123, 0.25);
+            align-self: flex-end;
+        }
+
+        .ai-message {
+            background: var(--ai-gradient);
+            color: white;
+            border-radius: 18px 18px 18px 6px;
+            box-shadow: 0 3px 12px rgba(79, 172, 254, 0.25);
+            align-self: flex-start;
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: var(--mobile-welcome-radius);
+            box-shadow: var(--mobile-shadow);
+            border: none;
+            margin: 16px auto;
+            max-width: 100%;
+            padding: var(--mobile-welcome-padding);
+            text-align: center;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .welcome-card i {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .welcome-card h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .welcome-card p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 400;
+            margin: 2px;
+        }
+
+        .input-section {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 16px;
+            box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .input-wrapper {
+            background: white;
+            border-radius: 22px;
+            padding: 4px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            background: #fff;
+        }
+
+        .input-wrapper:focus-within {
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        #message-input {
+            border: none;
+            outline: none;
+            resize: none;
+            padding: 12px 16px;
+            border-radius: 18px;
+            min-height: var(--mobile-input-height);
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.4;
+            flex: 1;
+            background: transparent;
+        }
+
+        #message-input::placeholder {
+            color: #999;
+            font-size: 14px;
+        }
+
+        #message-input:focus {
+            box-shadow: none;
+            background: transparent;
+        }
+
+        #send-button {
+            border-radius: 18px;
+            padding: 12px 20px;
+            background: var(--primary-gradient);
+            border: none;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            min-width: 44px;
+            height: var(--mobile-button-size);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        #send-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #send-button:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #send-button i {
+            margin: 0 !important;
+            font-size: 16px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            width: fit-content;
+            margin-bottom: 12px;
+            border-radius: 18px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: bounce 1.2s infinite;
+            display: inline-block;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+            background: #764ba2;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+            background: #4facfe;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            40% {
+                transform: translateY(-5px);
+                opacity: 0.8;
+            }
+        }
+
+        .timestamp {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            :root {
+                --mobile-message-max-width: 92%;
+                --mobile-font-size: 13px;
+                --mobile-input-height: 48px;
+                --mobile-button-size: 40px;
+                --mobile-welcome-padding: 16px;
+                --mobile-welcome-radius: 16px;
+            }
+
+            .navbar-custom {
+                padding: 10px 12px;
+            }
+
+            .navbar-brand {
+                font-size: 16px !important;
+            }
+
+            .navbar-brand i {
+                font-size: 18px !important;
+            }
+
+            #chat-messages {
+                padding: 12px;
+            }
+
+            .message-bubble {
+                font-size: 13px;
+                padding: 10px 14px;
+                margin-bottom: 10px;
+            }
+
+            .welcome-card {
+                margin: 12px auto;
+                padding: 16px;
+            }
+
+            .welcome-card h4 {
+                font-size: 16px;
+            }
+
+            .welcome-card p {
+                font-size: 12px;
+            }
+
+            .badge {
+                font-size: 10px;
+                padding: 5px 10px;
+            }
+
+            .input-section {
+                padding: 12px;
+            }
+
+            #message-input {
+                padding: 10px 14px;
+                min-height: 48px;
+                font-size: 13px;
+            }
+
+            #send-button {
+                padding: 10px 16px;
+                min-width: 40px;
+                height: 40px;
+            }
+
+            #send-button i {
+                font-size: 14px;
+            }
+
+            .alert-notification {
+                padding: 8px 12px;
+            }
+
+            .alert-notification span {
+                font-size: 11px;
+            }
+
+            .typing-indicator {
+                padding: 8px 12px;
+            }
+        }
+
+        /* Additional mobile optimizations */
+        @media (max-width: 360px) {
+            :root {
+                --mobile-message-max-width: 94%;
+                --mobile-font-size: 12px;
+                --mobile-input-height: 46px;
+                --mobile-button-size: 38px;
+            }
+
+            .message-bubble {
+                font-size: 12px;
+                padding: 9px 12px;
+            }
+
+            #message-input {
+                font-size: 12px;
+                min-height: 46px;
+            }
+
+            .welcome-card h4 {
+                font-size: 15px;
+            }
+
+            .badge {
+                font-size: 9px;
+                padding: 4px 8px;
+            }
+        }
+
+        /* Touch optimization */
+        input,
+        textarea,
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Smooth scrolling for mobile */
+        #chat-messages {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Prevent zoom on iOS */
+        input[type="text"],
+        textarea {
+            font-size: 16px !important;
+        }
+
+        /* Better touch targets */
+        button,
+        input,
+        textarea {
+            touch-action: manipulation;
+        }
+
+        .sos-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #ff4d4f, #d9363e);
+            color: #fff;
+            border-radius: 50%;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 6px 18px rgba(255, 77, 79, 0.45);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .sos-button i {
+            font-size: 16px;
+        }
+
+        .sos-button span {
+            display: none;
+        }
+
+        .sos-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 22px rgba(255, 77, 79, 0.6);
+            color: #fff;
+        }
+
+        @media (max-width: 576px) {
+            .sos-button {
+                width: 48px;
+                height: 48px;
+            }
+
+            .sos-button i {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-container">
+        <div class="fixed-header">
+            <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+                <div class="container">
+                    <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                        <i class="fas fa-stethoscope me-2 fa-lg"></i>
+                        <span class="fs-4">Doctor AI</span>
+                    </a>
+                    
+                    <a href="tel:103" class="sos-button ms-3" title="Tez yordam 103">
+                        <i class="fas fa-phone-alt"></i>
+                        <span>103</span>
+                    </a>
+
+                </div>
+            </nav>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-messages">
+                <div class="welcome-card p-4 text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-robot text-primary fa-3x"></i>
+                    </div>
+                    <h4 class="text-primary fw-bold mb-2">Doctor AI ga xush kelibsiz!</h4>
+                    <p class="text-muted">Sog'lig'ingiz bilan bog'liq savollaringizni bering. Masalan:</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+                        <span class="badge bg-light text-dark border p-2 rounded-pill">"Bosh og'rig'im bor"</span>
+                        <span class="badge bg-light text-dark border p-2 rounded-pill">"Qorin og'rig'i"</span>
+                        <span class="badge bg-light text-dark border p-2 rounded-pill">"Isitma qanday
+                            tushiriladi?"</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="container">
+                <div class="input-wrapper d-flex align-items-center">
+                    <textarea id="message-input" class="form-control flex-grow-1" placeholder="Savolingizni yozing..."
+                        rows="1"></textarea>
+                    <button id="send-button" class="btn btn-primary ms-3">
+                        <i class="fas fa-paper-plane me-2"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
