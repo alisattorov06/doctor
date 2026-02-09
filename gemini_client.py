@@ -23,7 +23,7 @@ class GeminiClient:
 Foydalanuvchi: {user_message}
 
 Javob formati:
-1. Alomatlarni aniqlashtirish (yosh, og'riq joyi, davomiyligi, kuchi haqida so'rang)
+1. Alomatlarni aniqlashtirish (yosh, og'riq joyi, davomiyligi, kuchi haqida so'rang) juda ham ko'p savol berib tashlama.Havfli kasalliklar yorilish uzulish o'lim xolati kuchli kasallik alomati borlarga tez yordamni zudlik bilan chaqirishni so'ra.
 2. Mumkin bo'lgan sabablar (taxminiy)
 3. Birinchi yordam va og'riqni yengillashtirish
 4. Dori vositalari (aniq nomlari, lekin ogohlantirish bilan)
